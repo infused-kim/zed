@@ -237,6 +237,7 @@ pub fn into_open_ai_response(
             effort,
             summary: Some(crate::responses::ReasoningSummaryMode::Auto),
         }),
+        store: None,
     }
 }
 

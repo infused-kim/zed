@@ -281,6 +281,7 @@ impl OpenAiLanguageModel {
                 &api_url,
                 &api_key,
                 request,
+                vec![],
             );
             let response = request.await?;
             Ok(response)
