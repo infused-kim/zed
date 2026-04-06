@@ -330,7 +330,8 @@ impl LanguageModel for OpenAiLanguageModel {
             | Model::FivePointFive
             | Model::FivePointFivePro
             | Model::O1
-            | Model::O3 => true,
+            | Model::O3
+            | Model::O4Mini => true,
             Model::ThreePointFiveTurbo
             | Model::Four
             | Model::FourTurbo

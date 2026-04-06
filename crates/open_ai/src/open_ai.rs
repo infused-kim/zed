@@ -74,6 +74,8 @@ pub enum Model {
     O3Mini,
     #[serde(rename = "o3")]
     O3,
+    #[serde(rename = "o4-mini")]
+    O4Mini,
     #[serde(rename = "gpt-5")]
     Five,
     #[serde(rename = "gpt-5-codex")]
@@ -132,6 +134,7 @@ impl Model {
             "o1" => Ok(Self::O1),
             "o3-mini" => Ok(Self::O3Mini),
             "o3" => Ok(Self::O3),
+            "o4-mini" => Ok(Self::O4Mini),
             "gpt-5" => Ok(Self::Five),
             "gpt-5-codex" => Ok(Self::FiveCodex),
             "gpt-5-mini" => Ok(Self::FiveMini),
@@ -158,6 +161,7 @@ impl Model {
             Self::O1 => "o1",
             Self::O3Mini => "o3-mini",
             Self::O3 => "o3",
+            Self::O4Mini => "o4-mini",
             Self::Five => "gpt-5",
             Self::FiveCodex => "gpt-5-codex",
             Self::FiveMini => "gpt-5-mini",
@@ -184,6 +188,7 @@ impl Model {
             Self::O1 => "o1",
             Self::O3Mini => "o3-mini",
             Self::O3 => "o3",
+            Self::O4Mini => "o4-mini",
             Self::Five => "gpt-5",
             Self::FiveCodex => "gpt-5-codex",
             Self::FiveMini => "gpt-5-mini",
@@ -210,6 +215,7 @@ impl Model {
             Self::O1 => 200_000,
             Self::O3Mini => 200_000,
             Self::O3 => 200_000,
+            Self::O4Mini => 200_000,
             Self::Five => 272_000,
             Self::FiveCodex => 272_000,
             Self::FiveMini => 400_000,
@@ -239,6 +245,7 @@ impl Model {
             Self::O1 => Some(100_000),
             Self::O3Mini => Some(100_000),
             Self::O3 => Some(100_000),
+            Self::O4Mini => Some(100_000),
             Self::Five => Some(128_000),
             Self::FiveCodex => Some(128_000),
             Self::FiveMini => Some(128_000),
@@ -259,7 +266,10 @@ impl Model {
             Self::Custom {
                 reasoning_effort, ..
             } => reasoning_effort.to_owned(),
-            Self::FivePointThreeCodex | Self::FivePointFourPro | Self::FivePointFivePro => {
+            Self::O4Mini
+            | Self::FivePointThreeCodex
+            | Self::FivePointFourPro
+            | Self::FivePointFivePro => {
                 Some(ReasoningEffort::Medium)
             }
             _ => None,
@@ -272,6 +282,12 @@ impl Model {
                 supports_chat_completions,
                 ..
             } => !*supports_chat_completions,
+            Self::O4Mini
+            | Self::FiveCodex
+            | Self::FivePointTwoCodex
+            | Self::FivePointThreeCodex
+            | Self::FivePointFourPro
+            | Self::FivePointFivePro => true,
             _ => true,
         }
     }
@@ -298,7 +314,7 @@ impl Model {
             | Self::FivePointFive
             | Self::FivePointFivePro
             | Self::FiveNano => true,
-            Self::O1 | Self::O3 | Self::O3Mini | Model::Custom { .. } => false,
+            Self::O1 | Self::O3 | Self::O3Mini | Self::O4Mini | Model::Custom { .. } => false,
         }
     }
 
