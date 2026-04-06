@@ -266,10 +266,7 @@ impl Model {
             Self::Custom {
                 reasoning_effort, ..
             } => reasoning_effort.to_owned(),
-            Self::O4Mini
-            | Self::FivePointThreeCodex
-            | Self::FivePointFourPro
-            | Self::FivePointFivePro => {
+            Self::O4Mini | Self::FivePointThreeCodex | Self::FivePointFourPro => {
                 Some(ReasoningEffort::Medium)
             }
             _ => None,
