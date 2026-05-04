@@ -31,6 +31,9 @@ const CODEX_BASE_URL: &str = "https://chatgpt.com/backend-api/codex";
 const OPENAI_TOKEN_URL: &str = "https://auth.openai.com/oauth/token";
 const OPENAI_AUTHORIZE_URL: &str = "https://auth.openai.com/oauth/authorize";
 const CLIENT_ID: &str = "app_EMoamEEZ73f0CkXaXp7hrann";
+const OAUTH_REDIRECT_BIND_ADDRESS: &str = "127.0.0.1:1455";
+const OAUTH_REDIRECT_ORIGIN: &str = "http://localhost";
+const OAUTH_REDIRECT_PATH: &str = "/auth/callback";
 
 const CREDENTIALS_KEY: &str = "https://chatgpt.com/backend-api/codex";
 const TOKEN_REFRESH_BUFFER_MS: u64 = 5 * 60 * 1000;
@@ -650,9 +653,14 @@ async fn do_oauth_flow(
     http_client: Arc<dyn HttpClient>,
     cx: &AsyncApp,
 ) -> Result<CodexCredentials> {
-    // Start the callback server FIRST so the redirect URI is ready
-    let (redirect_uri, callback_rx) = http_client::start_oauth_callback_server()
-        .context("Failed to start OAuth callback server")?;
+    // Start the callback server first so the fixed redirect URI is reserved
+    // before we send the user into the browser flow.
+    let (redirect_uri, callback_rx) = http_client::start_oauth_callback_server_with_path(
+        OAUTH_REDIRECT_BIND_ADDRESS,
+        OAUTH_REDIRECT_ORIGIN,
+        OAUTH_REDIRECT_PATH,
+    )
+    .context("Failed to start OAuth callback server")?;
 
     // PKCE verifier: 32 random bytes → base64url (no padding)
     let mut verifier_bytes = [0u8; 32];

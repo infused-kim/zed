@@ -637,14 +637,29 @@ mod oauth_callback_server {
 
     /// Start a loopback HTTP server to receive the OAuth authorization callback.
     ///
-    /// Binds to an ephemeral loopback port. Returns `(redirect_uri, callback_future)`.
-    /// The caller should use the redirect URI in the authorization request, open
-    /// the browser, then await the future to receive the callback.
+    /// Binds to an ephemeral loopback port on `127.0.0.1` and serves `/callback`.
+    /// Returns `(redirect_uri, callback_future)`. The caller should use the
+    /// redirect URI in the authorization request, open the browser, then await
+    /// the future to receive the callback.
     pub fn start_oauth_callback_server() -> Result<(
         String,
         futures::channel::oneshot::Receiver<Result<OAuthCallbackParams>>,
     )> {
-        let server = tiny_http::Server::http("127.0.0.1:0").map_err(|e| {
+        start_oauth_callback_server_with_path("127.0.0.1:0", "http://127.0.0.1", "/callback")
+    }
+
+    /// Start a loopback HTTP server with a custom bind address, public origin,
+    /// and callback path.
+    pub fn start_oauth_callback_server_with_path(
+        bind_address: &str,
+        redirect_origin: &str,
+        callback_path: &str,
+    ) -> Result<(
+        String,
+        futures::channel::oneshot::Receiver<Result<OAuthCallbackParams>>,
+    )> {
+        let callback_path_owned = callback_path.to_string();
+        let server = tiny_http::Server::http(bind_address).map_err(|e| {
             anyhow!(e).context("Failed to bind loopback listener for OAuth callback")
         })?;
         let port = server
@@ -653,7 +668,7 @@ mod oauth_callback_server {
             .ok_or_else(|| anyhow!("server not bound to a TCP address"))?
             .port();
 
-        let redirect_uri = format!("http://127.0.0.1:{}/callback", port);
+        let redirect_uri = format!("{redirect_origin}:{port}{callback_path_owned}");
 
         let (tx, rx) = futures::channel::oneshot::channel();
 
@@ -680,7 +695,7 @@ mod oauth_callback_server {
                     continue;
                 };
 
-                let result = handle_oauth_callback_request(&request);
+                let result = handle_oauth_callback_request(&request, &callback_path_owned);
 
                 let (status_code, body) = match &result {
                     Ok(_) => (
@@ -726,11 +741,14 @@ mod oauth_callback_server {
         Ok((redirect_uri, rx))
     }
 
-    fn handle_oauth_callback_request(request: &tiny_http::Request) -> Result<OAuthCallbackParams> {
+    fn handle_oauth_callback_request(
+        request: &tiny_http::Request,
+        callback_path: &str,
+    ) -> Result<OAuthCallbackParams> {
         let url = Url::parse(&format!("http://localhost{}", request.url()))
             .context("malformed callback request URL")?;
 
-        if url.path() != "/callback" {
+        if url.path() != callback_path {
             anyhow::bail!("unexpected path in OAuth callback: {}", url.path());
         }
 
@@ -742,4 +760,6 @@ mod oauth_callback_server {
 }
 
 #[cfg(not(target_family = "wasm"))]
-pub use oauth_callback_server::{OAuthCallbackParams, start_oauth_callback_server};
+pub use oauth_callback_server::{
+    OAuthCallbackParams, start_oauth_callback_server, start_oauth_callback_server_with_path,
+};
