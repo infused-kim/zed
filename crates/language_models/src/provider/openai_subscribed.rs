@@ -463,10 +463,11 @@ impl LanguageModel for OpenAiSubscribedLanguageModel {
             self.model.id(),
             self.model.supports_parallel_tool_calls(),
             self.model.supports_prompt_cache_key(),
-            self.max_output_tokens(),
+            None,
             self.model.reasoning_effort(),
         );
         responses_request.store = Some(false);
+        responses_request.max_output_tokens = None;
 
         // The Codex backend requires system messages to be in the top-level
         // `instructions` field rather than as input items.
